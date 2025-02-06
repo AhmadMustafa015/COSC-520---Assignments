@@ -17,10 +17,10 @@ Setup and Running Instructions:
           pip install pybloom-live
           pip install cuckoofilter
     - To run the experiment:
-          python this_script.py
+          python task_3.py
     - To run unit tests:
-          python this_script.py -t
-       (Alternatively: python -m unittest this_script.py)
+          python task_3.py -t
+       (Alternatively: python -m unittest task_3.py)
 
 Author: Ahmad Abdel-Qader
 Date: 2025-02-02
@@ -111,7 +111,7 @@ def run_experiment():
         None (prints timing results and saves a lookup comparison plot)
     """
     # Experiment parameters
-    dataset_size = 1000000      # 1 million login strings
+    dataset_size = 10000000      # 10 million login strings
     query_count = 1000          # Number of random lookup queries
     false_positive_prob = 0.01  # Desired false positive rate for Bloom filter
 
