@@ -9,6 +9,7 @@ from bintrees import AVLTree, RBTree  # Use bintrees library for AVLTree
 
 # --- Binary Search Tree Implementation ---
 
+
 class BSTNode:
     """
     Binary Search Tree Node class.
@@ -18,16 +19,19 @@ class BSTNode:
         left: Reference to left child node
         right: Reference to right child node
     """
+
     def __init__(self, key):
         self.key = key
         self.left = None
         self.right = None
+
 
 class BST:
     """
     Binary Search Tree implementation.
     Provides methods for insert, search and delete operations.
     """
+
     def __init__(self):
         """Initialize an empty Binary Search Tree."""
         self.root = None
@@ -138,11 +142,12 @@ class BST:
         """
         current = node
         while current.left is not None:
-          current = current.left
+            current = current.left
         return current
 
 
 # --- B-Tree Implementation ---
+
 
 class BTreeNode:
     """
@@ -153,6 +158,7 @@ class BTreeNode:
         keys: List of keys stored in the node
         children: List of child nodes
     """
+
     def __init__(self, leaf=True):
         self.leaf = leaf
         self.keys = []
@@ -164,6 +170,7 @@ class BTree:
     B-Tree implementation with a specific order.
     Provides methods for insert, search and delete operations.
     """
+
     def __init__(self, order):
         """
         Initialize an empty B-Tree with specified order.
@@ -246,7 +253,7 @@ class BTree:
         # Move keys from y to z
         mid_key = y.keys[t - 1]  # Middle key moves up to parent
         z.keys = y.keys[t:]  # Copy keys t to 2t-1 to z
-        y.keys = y.keys[:t - 1]  # Keep keys 0 to t-2 in y
+        y.keys = y.keys[: t - 1]  # Keep keys 0 to t-2 in y
 
         # If not leaf, move children too
         if not y.leaf:
@@ -503,12 +510,14 @@ class BTree:
 
 # --- Wrapper class for AVLTree from bintrees ---
 
+
 class AVLTreeWrapper:
     """
     Wrapper for AVLTree from bintrees library to provide a consistent API.
 
     This wrapper adapts the bintrees.AVLTree class to match our BST interface.
     """
+
     def __init__(self):
         """Initialize an empty AVL Tree."""
         self.tree = AVLTree()
@@ -555,68 +564,98 @@ class AVLTreeWrapper:
 
 # --- Data Generation and Benchmarking ---
 
-def generate_dataset(size, seed=42):
+
+def generate_datasets(sizes, seed=42):
     """
-    Generates a list of random integers for benchmarking.
+    Generates multiple datasets of different sizes for benchmarking.
 
     Args:
-        size: Number of elements in the dataset
+        sizes: List of dataset sizes to generate
         seed: Random seed for reproducibility
 
     Returns:
-        List of random integers
+        Dictionary mapping sizes to datasets
     """
+    datasets = {}
     random.seed(seed)
-    return random.sample(range(size * 3), size)  # Avoid duplicates
 
-def save_dataset(dataset, filename="benchmark_dataset.txt"):
+    print("Generating datasets...")
+    for size in sizes:
+        print(f"  Generating dataset with {size} elements...")
+        datasets[size] = random.sample(range(size * 3), size)
+
+    return datasets
+
+
+def save_datasets_csv(datasets, filename="benchmark_datasets.csv"):
     """
-    Save the dataset to a file for reproducibility.
+    Save all datasets to a CSV file with each column representing a dataset of a specific size.
 
     Args:
-        dataset: List of data points
-        filename: Name of the file to save to
+        datasets: Dictionary mapping sizes to datasets
+        filename: Name of the CSV file to save to
     """
-    with open(filename, "w") as f:
-        for item in dataset:
-            f.write(f"{item}\n")
-    print(f"Dataset saved to {filename}")
+    import csv
 
-def benchmark(data_structures, dataset_sizes, operations):
+    # Find the max length across all datasets
+    max_length = max(len(dataset) for dataset in datasets.values())
+
+    # Prepare headers
+    headers = [f"size_{size}" for size in sorted(datasets.keys())]
+
+    print(f"Saving datasets to {filename}...")
+    with open(filename, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(headers)
+
+        # Write data rows, padding shorter datasets with empty cells
+        for i in range(max_length):
+            row = []
+            for size in sorted(datasets.keys()):
+                dataset = datasets[size]
+                row.append(dataset[i] if i < len(dataset) else "")
+            writer.writerow(row)
+
+    print(f"Datasets saved to {filename}")
+
+
+def benchmark(data_structures, datasets, operations):
     """
-    Benchmarks the given data structures with specified operations and dataset sizes.
+    Benchmarks the given data structures with specified operations and datasets.
 
     Args:
         data_structures: Dictionary of data structures to benchmark
-        dataset_sizes: List of dataset sizes to test
+        datasets: Dictionary mapping sizes to datasets
         operations: Dictionary of operations to benchmark
 
     Returns:
         Dictionary with benchmarking results for each data structure and operation
     """
     results = {}
+    dataset_sizes = sorted(datasets.keys())
 
-    for ds_name, ds_class in data_structures.items():
-        results[ds_name] = {}
-        print(f"Benchmarking {ds_name}...")
+    # Initialize results structure
+    for ds_name in data_structures:
+        results[ds_name] = {op_name: [] for op_name in operations}
 
-        for op_name, op_func in operations.items():
-            results[ds_name][op_name] = []
+    # First loop over dataset sizes for fair comparison
+    for size in dataset_sizes:
+        dataset = datasets[size]
+        print(f"\nBenchmarking with dataset size {size}...")
 
-            for size in dataset_sizes:
-                # Create a new instance for each test to ensure fair comparison
+        # For each dataset size, benchmark all data structures
+        for ds_name, ds_class in data_structures.items():
+            print(f"  Testing {ds_name}...")
+
+            # For each operation type
+            for op_name, op_func in operations.items():
+                print(f"    Operation: {op_name}")
+
+                # Create a new instance for this test
                 if ds_name == "BTree (Order=5)":
                     ds = BTree(5)
                 else:
                     ds = ds_class()
-
-                dataset = generate_dataset(size)
-
-                # Save the largest dataset for reference
-                if size == max(dataset_sizes) and ds_name == list(data_structures.keys())[0] and op_name == "insert":
-                    save_dataset(dataset[:10000])  # Save first 10,000 elements to keep file size reasonable
-
-                print(f"  Testing {op_name} with {size} elements...")
 
                 # For search and delete, we need to insert the elements first
                 if op_name in ["search", "delete"]:
@@ -639,9 +678,10 @@ def benchmark(data_structures, dataset_sizes, operations):
                 end_time = time.time()
                 elapsed = end_time - start_time
                 results[ds_name][op_name].append(elapsed)
-                print(f"    Completed in {elapsed:.2f} seconds")
+                print(f"      Completed in {elapsed:.2f} seconds")
 
-    return results
+    return results, dataset_sizes
+
 
 
 def plot_results(results, dataset_sizes, operation):
@@ -655,16 +695,19 @@ def plot_results(results, dataset_sizes, operation):
     """
     plt.figure(figsize=(12, 8))
 
-    markers = ['o', 's', '^', 'D', 'x']
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+    markers = ["o", "s", "^", "D", "x"]
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 
     for i, (ds_name, op_results) in enumerate(results.items()):
-        plt.plot(dataset_sizes, op_results[operation],
-                 label=ds_name,
-                 marker=markers[i % len(markers)],
-                 color=colors[i % len(colors)],
-                 linewidth=2,
-                 markersize=8)
+        plt.plot(
+            dataset_sizes,
+            op_results[operation],
+            label=ds_name,
+            marker=markers[i % len(markers)],
+            color=colors[i % len(colors)],
+            linewidth=2,
+            markersize=8,
+        )
 
     plt.xlabel("Dataset Size (n)", fontsize=14)
     plt.ylabel("Time (seconds)", fontsize=14)
@@ -674,7 +717,7 @@ def plot_results(results, dataset_sizes, operation):
     plt.tight_layout()
 
     # Use log scale for x-axis to better visualize growth patterns
-    plt.xscale('log')
+    plt.xscale("log")
 
     plt.savefig(f"{operation}_benchmark.png", dpi=300)
     print(f"Plot saved as {operation}_benchmark.png")
@@ -682,6 +725,7 @@ def plot_results(results, dataset_sizes, operation):
 
 
 # --- Unit Tests ---
+
 
 class TestDataStructures(unittest.TestCase):
     """Unit tests for tree data structures."""
@@ -753,6 +797,7 @@ class TestDataStructures(unittest.TestCase):
 
 # --- Run Experiment Function ---
 
+
 def run_experiment():
     """
     Run the tree data structures benchmarking experiment.
@@ -761,12 +806,18 @@ def run_experiment():
     and produces visualization plots of the results.
     """
     # Define dataset sizes for benchmarking
-    dataset_sizes = [1000, 10000, 100000, 500000]  # Removed 1,000,000 to speed up testing
+    dataset_sizes = [100000, 1000000, 5000000, 10000000]  # Adjusted for reasonable run time
+
+    # Generate all datasets upfront
+    datasets = generate_datasets(dataset_sizes)
+
+    # Save datasets to CSV for reference and reproducibility
+    save_datasets_csv(datasets)
 
     # Define data structures to benchmark
     data_structures = {
         "BST": BST,
-        "AVLTree": AVLTreeWrapper,  # Using our wrapper for bintrees.AVLTree
+        "AVLTree": AVLTreeWrapper,
         "BTree (Order=5)": BTree,
     }
 
@@ -774,26 +825,24 @@ def run_experiment():
     operations = {
         "insert": lambda ds, key: ds.insert(key),
         "search": lambda ds, key: ds.search(key),
-        "delete": lambda ds, key: ds.delete(key)
+        "delete": lambda ds, key: ds.delete(key),
     }
 
     print("\nStarting benchmarking...")
-    results = benchmark(data_structures, dataset_sizes, operations)
+    results, used_sizes = benchmark(data_structures, datasets, operations)
 
     print("\nGenerating plots...")
     for operation in ["insert", "search", "delete"]:
-        plot_results(results, dataset_sizes, operation)
+        plot_results(results, used_sizes, operation)
 
     print("\nBenchmark complete. Plots saved as .png files.")
-    print("\nNOTE: A sample of the dataset has been saved as 'benchmark_dataset.txt'.")
-    print("Please upload this dataset to a web repository and include the link in your PDF report.")
-
+    print("\nNOTE: All datasets have been saved in 'benchmark_datasets.csv'.")
 
 # --- Main Execution ---
 
 if __name__ == "__main__":
     # Check if -t flag is provided to run unit tests
-    if len(sys.argv) > 1 and sys.argv[1] == '-t':
+    if len(sys.argv) > 1 and sys.argv[1] == "-t":
         # Remove the "-t" argument so that unittest does not get confused
         sys.argv = [sys.argv[0]]
         unittest.main()
