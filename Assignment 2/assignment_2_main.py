@@ -1,3 +1,37 @@
+# ------------------------------------------------------
+# Tree Data Structures Benchmark and Analysis
+# ------------------------------------------------------
+#
+# INSTRUCTIONS FOR RUNNING THE CODE:
+#
+# 1. Environment Setup:
+#    - Ensure Python 3.6+ is installed
+#    - Install required packages: pip install matplotlib numpy bintrees
+#
+# 2. Running the Benchmark:
+#    - Execute: python assignment_2_main.py
+#    - This will run all benchmarks and generate comparison plots
+#    - Results are saved as PNG files in the current directory
+#
+# 3. Running the Unit Tests:
+#    - Execute: python assignment_2_main.py -t
+#    - This runs tests for all tree implementations
+#
+# 4. Output Files:
+#    - insert_benchmark.png: Performance comparison for insertion operations
+#    - search_benchmark.png: Performance comparison for search operations
+#    - delete_benchmark.png: Performance comparison for deletion operations
+#    - benchmark_datasets.csv: The datasets used for benchmarking
+#
+# 5. Adjusting Parameters:
+#    - Dataset sizes can be modified in run_experiment() function
+#    - B-Tree order can be changed in the data_structures dictionary
+#
+# Note: The full benchmark may take several minutes to complete with
+# larger dataset sizes.
+#
+# ------------------------------------------------------
+
 import time
 import random
 import matplotlib.pyplot as plt
